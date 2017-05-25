@@ -6,6 +6,8 @@ Given the partial URL entered into graph API of the format
     
 The app will fetch all the posts between the `start date` and the `end date` provided.    
 
+## Command Line Arguments
+
 The following command-line parameters are used :
 
 `--start_date` provide the start date
@@ -17,3 +19,7 @@ The following command-line parameters are used :
 `--url` the partial url typed into the graph API explorer
 
 The access token, url and other properties can be modified by editing the `config.ini` file directly.
+
+## Usage
+
+    python3 facebook_requests.py --start_date 2016-05-22 --end_date 2017-01-01
