@@ -62,6 +62,8 @@ def get_all_posts(start_pointer, start_date, end_date):
         except KeyError:
             break
         response = requests.get(url)
+        while response.status_code != 200:
+            response = requests.get(url)
         start_pointer = json.loads(response.text)
     return all_posts
 
@@ -76,7 +78,7 @@ def construct_json_for_page(all_posts, args):
     result['id']=page_id
     result['data']=all_posts
     with open('data/page_'+page_id, 'w') as f:
-        json.dump(all_posts, f)
+        json.dump(result, f)
 
 
 def main():
