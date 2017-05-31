@@ -40,9 +40,13 @@ def extract_date(datestring):
     return date_mentioned
 
 
-def get_all_posts(start_pointer, start_date, end_date):
+def get_all_posts(args, start_date, end_date):
     all_posts = list()
-
+    url = construct_url(domain=args.domain,
+                        url=args.url,
+                        access_token=args.access_token)
+    response = requests.get(url)
+    start_pointer = json.loads(response.text)
     while True:
         try:
             result = start_pointer['data']
@@ -68,8 +72,8 @@ def get_all_posts(start_pointer, start_date, end_date):
     return all_posts
 
 
-def construct_url(args):
-    return args.domain + args.url + '&' + 'access_token=' + args.access_token
+def construct_url(domain, url, access_token):
+    return domain + url + '&' + 'access_token=' + access_token
 
 
 def construct_json_for_page(all_posts, args):
