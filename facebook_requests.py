@@ -45,9 +45,9 @@ def get_all_posts(start_pointer, start_date, end_date):
 
     while True:
         try:
-            result = start_pointer['posts']['data']
-        except KeyError:
             result = start_pointer['data']
+        except KeyError:
+            break
         for each_status in result:
             date_string = each_status['created_time']
             date_mentioned = format_date(date_string)
@@ -58,9 +58,9 @@ def get_all_posts(start_pointer, start_date, end_date):
         if date_mentioned < start_date:
             break
         try:
-            url = start_pointer['posts']['paging']['next']
-        except KeyError:
             url = start_pointer['paging']['next']
+        except KeyError:
+            break
         response = requests.get(url)
         start_pointer = json.loads(response.text)
     return all_posts
@@ -71,7 +71,7 @@ def construct_url(args):
 
 
 def construct_json_for_page(all_posts, args):
-    page_id = args.url.split('?')[0]
+    page_id = args.url.split('?')[0].split('/')[0]
     result = dict()
     result['id']=page_id
     result['data']=all_posts
