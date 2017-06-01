@@ -30,6 +30,17 @@ def load():
     return args, config
 
 
+def get_new_access_token(access_token, config):
+    refresh_token_url = config['domain'] + \
+                        'oauth/access_token? \
+                        grant_type=fb_exchange_token&' + \
+                        'client_id=' + config['client_id'] + '&' + \
+                        'client_secret=' + config['client_secret'] + '&' + \
+                        'fb_exchange_token=' + access_token
+    new_access_token = requests.get(refresh_token_url)
+    return new_access_token
+
+
 def format_date(datestring):
     return datestring[0: datestring.find('T')]
 
@@ -40,11 +51,12 @@ def extract_date(datestring):
     return date_mentioned
 
 
-def get_all_posts(args, start_date, end_date):
+def get_all_posts(args, config, start_date, end_date):
     all_posts = list()
     url = construct_url(domain=args.domain,
                         url=args.url,
                         access_token=args.access_token)
+    access_token = args.access_token
     response = requests.get(url)
     start_pointer = json.loads(response.text)
     while True:
@@ -67,7 +79,9 @@ def get_all_posts(args, start_date, end_date):
             break
         response = requests.get(url)
         while response.status_code != 200:
-            response = requests.get(url)
+            access_token = get_new_access_token(access_token=access_token,
+                                                config=config)
+            response = requests.get(url + '&access_token=' + access_token)
         start_pointer = json.loads(response.text)
     return all_posts
 
@@ -79,9 +93,9 @@ def construct_url(domain, url, access_token):
 def construct_json_for_page(all_posts, args):
     page_id = args.url.split('?')[0].split('/')[0]
     result = dict()
-    result['id']=page_id
-    result['data']=all_posts
-    with open('data/page_'+page_id, 'w') as f:
+    result['id'] = page_id
+    result['data'] = all_posts
+    with open('data/page_' + page_id, 'w') as f:
         json.dump(result, f)
 
 
@@ -89,10 +103,7 @@ def main():
     args, config = load()
     start_date = extract_date(config['start_date'])
     end_date = extract_date(config['end_date'])
-    url = construct_url(args)
-    response = requests.get(url)
-    start_pointer = json.loads(response.text)
-    all_posts = get_all_posts(start_pointer, start_date, end_date)
+    all_posts = get_all_posts(args, config, start_date, end_date)
     construct_json_for_page(all_posts, args)
 
 
