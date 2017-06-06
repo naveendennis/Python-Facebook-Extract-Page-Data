@@ -30,15 +30,15 @@ def load():
     return args, config
 
 
-def get_new_access_token(access_token, config):
+def get_new_access_token(config):
     refresh_token_url = config['domain'] + \
-                        'oauth/access_token? \
-                        grant_type=fb_exchange_token&' + \
+                        'oauth/access_token?' + \
+                        'grant_type=fb_exchange_token&' + \
                         'client_id=' + config['client_id'] + '&' + \
                         'client_secret=' + config['client_secret'] + '&' + \
-                        'fb_exchange_token=' + access_token
+                        'fb_exchange_token=' + config['access_token']
     new_access_token = requests.get(refresh_token_url)
-    return new_access_token
+    return json.loads(new_access_token.text)['access_token']
 
 
 def format_date(datestring):
@@ -51,14 +51,28 @@ def extract_date(datestring):
     return date_mentioned
 
 
+def get_response(url):
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    config.set('facebook', 'access_token', get_new_access_token(config['facebook']))
+    with open('config.ini', 'w') as f:
+        config.write(f)
+    response = requests.get(url + '&access_token=' + config['facebook']['access_token'])
+    return response
+
+
 def get_all_posts(args, config, start_date, end_date):
-    all_posts = list()
     url = construct_url(domain=args.domain,
                         url=args.url,
-                        access_token=args.access_token)
-    access_token = args.access_token
-    response = requests.get(url)
+                        access_token=config['access_token'])
+    response = get_response(url)
     start_pointer = json.loads(response.text)
+    return get_them_all(args, config, start_date, end_date, start_pointer)
+
+
+def get_them_all(args, config, start_date, end_date, start_pointer, has_comment=True):
+
+    all_posts = list()
     while True:
         try:
             result = start_pointer['data']
@@ -69,7 +83,11 @@ def get_all_posts(args, config, start_date, end_date):
             date_mentioned = format_date(date_string)
             date_mentioned = extract_date(date_mentioned)
             if start_date < date_mentioned < end_date:
+                if has_comment:
+                    each_status['comments'] = get_them_all(args, config, start_date, end_date, each_status['comments'],
+                                                           has_comment=False)
                 all_posts.append(each_status)
+
 
         if date_mentioned < start_date:
             break
@@ -77,12 +95,11 @@ def get_all_posts(args, config, start_date, end_date):
             url = start_pointer['paging']['next']
         except KeyError:
             break
-        response = requests.get(url)
+        response = get_response(url)
         while response.status_code != 200:
-            access_token = get_new_access_token(access_token=access_token,
-                                                config=config)
-            response = requests.get(url + '&access_token=' + access_token)
+            response = get_response(url)
         start_pointer = json.loads(response.text)
+
     return all_posts
 
 
@@ -95,7 +112,7 @@ def construct_json_for_page(all_posts, args):
     result = dict()
     result['id'] = page_id
     result['data'] = all_posts
-    with open('data/page_' + page_id, 'w') as f:
+    with open('data/page_comments_' + page_id, 'w') as f:
         json.dump(result, f)
 
 
