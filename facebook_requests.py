@@ -1,6 +1,7 @@
 import requests
 import configparser
 import json
+import string
 
 
 def load():
@@ -64,10 +65,23 @@ def get_response(url):
 def get_all_posts(args, config, start_date, end_date):
     url = construct_url(domain=args.domain,
                         url=args.url,
-                        access_token=config['access_token'])
+                        access_token=args.access_token)
     response = get_response(url)
     start_pointer = json.loads(response.text)
+    config['access_token'] = args.access_token
     return get_them_all(args, config, start_date, end_date, start_pointer)
+
+
+def is_in_topic(message, config):
+    result = False
+    translator = str.maketrans(' ', ' ', string.punctuation)
+    considered_tokens = config['searchTokens'].split(' ')
+    tokens_in_each_status = message.strip().translate(table=translator).lower().split(' ')
+    for each_considered_token in considered_tokens:
+        if each_considered_token in tokens_in_each_status:
+            result = True
+            break
+    return result
 
 
 def get_them_all(args, config, start_date, end_date, start_pointer, has_comment=True):
@@ -84,8 +98,13 @@ def get_them_all(args, config, start_date, end_date, start_pointer, has_comment=
             date_mentioned = extract_date(date_mentioned)
             if start_date < date_mentioned < end_date:
                 if has_comment:
-                    each_status['comments'] = get_them_all(args, config, start_date, end_date, each_status['comments'],
+                    if not is_in_topic(each_status['message'], config):
+                        continue
+
+                    each_status['comments'] = get_them_all(args, config, start_date, end_date,
+                                                           each_status['comments'],
                                                            has_comment=False)
+
                 all_posts.append(each_status)
             else:
                 break
