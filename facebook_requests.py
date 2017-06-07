@@ -87,7 +87,8 @@ def get_them_all(args, config, start_date, end_date, start_pointer, has_comment=
                     each_status['comments'] = get_them_all(args, config, start_date, end_date, each_status['comments'],
                                                            has_comment=False)
                 all_posts.append(each_status)
-
+            else:
+                break
 
         if date_mentioned < start_date:
             break
