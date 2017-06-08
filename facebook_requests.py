@@ -76,7 +76,7 @@ def is_in_topic(message, config):
     result = False
     translator = str.maketrans(' ', ' ', string.punctuation)
     considered_tokens = config['searchTokens'].split(' ')
-    tokens_in_each_status = message.strip().translate(table=translator).lower().split(' ')
+    tokens_in_each_status = message.strip().translate(translator).lower().split(' ')
     for each_considered_token in considered_tokens:
         if each_considered_token in tokens_in_each_status:
             result = True
