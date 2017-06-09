@@ -176,6 +176,7 @@ def make_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+
 def main():
     args = load()
     start_date = extract_date(config['facebook']['start_date'])
@@ -185,6 +186,8 @@ def main():
 
 
 if __name__ == '__main__':
+    make_dir('properties')
+    make_dir('data')
     import timeit
     start_time = timeit.default_timer()
     main()
