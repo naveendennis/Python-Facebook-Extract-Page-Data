@@ -6,7 +6,7 @@ import pathlib
 import os
 
 config = configparser.ConfigParser()
-config.read('properties/config.ini')
+config.read(os.path.join('properties', 'config.ini'))
 
 
 def load():
@@ -134,12 +134,12 @@ def get_them_all(args, start_date, end_date, start_pointer, has_comment=True):
                     try:
                         if not is_in_topic(each_status['message']):
                             continue
+                        else:
+                            each_status['comments'] = get_them_all(args, start_date, end_date,
+                                                                   each_status['comments'],
+                                                                   has_comment=False)
                     except KeyError:
                         continue
-
-                    each_status['comments'] = get_them_all(args, start_date, end_date,
-                                                           each_status['comments'],
-                                                           has_comment=False)
 
                 all_posts.append(each_status)
             else:
@@ -164,11 +164,12 @@ def construct_url(domain, url, access_token):
 
 
 def construct_json_for_page(all_posts, args):
+    global config
     page_id = args.url.split('?')[0].split('/')[0]
     result = dict()
     result['id'] = page_id
     result['data'] = all_posts
-    with open('data/page_comments_' + page_id, 'w') as f:
+    with open(os.path.join(config['facebook']['report_directory'], config['facebook']['report_append_fvalue']) + page_id, 'w') as f:
         json.dump(result, f)
 
 
@@ -186,8 +187,8 @@ def main():
 
 
 if __name__ == '__main__':
-    make_dir('properties')
-    make_dir('data')
+    make_dir(config['facebook']['properties_directory'])
+    make_dir(config['facebook']['data_directory'])
     import timeit
     start_time = timeit.default_timer()
     main()
