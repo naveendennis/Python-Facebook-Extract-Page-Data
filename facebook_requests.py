@@ -45,16 +45,6 @@ def get_new_access_token(config):
     return json.loads(new_access_token.text)['access_token']
 
 
-def format_date(datestring):
-    return datestring[0: datestring.find('T')]
-
-
-def extract_date(datestring):
-    import datetime
-    date_mentioned = datetime.datetime.strptime(datestring, "%Y-%m-%d").date()
-    return date_mentioned
-
-
 def file_exists(path):
     path = pathlib.Path(path)
     return path.is_file()
@@ -95,12 +85,13 @@ def reconnect(url):
 def get_all_posts(args, start_date, end_date):
     global config
     url = construct_url(domain=args.domain,
-                        url=args.url,
-                        access_token=args.access_token)
+                        url=args.url)
+    date_range = '&since=%s&until=%s' % (start_date, end_date)
+    url += date_range
     response = get_response(url)
     start_pointer = json.loads(response.text)
     config['facebook']['access_token'] = args.access_token
-    return get_them_all(args, start_date, end_date, start_pointer)
+    return get_them_all(args, start_pointer)
 
 
 def is_in_topic(message):
@@ -116,7 +107,7 @@ def is_in_topic(message):
     return result
 
 
-def get_them_all(args, start_date, end_date, start_pointer, has_comment=True):
+def get_them_all(args, start_pointer, has_comment=True):
 
     global config
     all_posts = list()
@@ -126,27 +117,19 @@ def get_them_all(args, start_date, end_date, start_pointer, has_comment=True):
         except KeyError:
             break
         for each_status in result:
-            date_string = each_status['created_time']
-            date_mentioned = format_date(date_string)
-            date_mentioned = extract_date(date_mentioned)
-            if start_date < date_mentioned < end_date:
-                if has_comment:
-                    try:
-                        if not is_in_topic(each_status['message']):
-                            continue
-                        else:
-                            each_status['comments'] = get_them_all(args, start_date, end_date,
-                                                                   each_status['comments'],
-                                                                   has_comment=False)
-                    except KeyError:
+            if has_comment:
+                try:
+                    if not is_in_topic(each_status['message']):
                         continue
+                    else:
+                        each_status['comments'] = get_them_all(args,
+                                                               each_status['comments'],
+                                                               has_comment=False)
+                except KeyError:
+                    continue
 
-                all_posts.append(each_status)
-            else:
-                break
+            all_posts.append(each_status)
 
-        if date_mentioned < start_date:
-            break
         try:
             url = start_pointer['paging']['next']
         except KeyError:
@@ -159,8 +142,8 @@ def get_them_all(args, start_date, end_date, start_pointer, has_comment=True):
     return all_posts
 
 
-def construct_url(domain, url, access_token):
-    return domain + url + '&' + 'access_token=' + access_token
+def construct_url(domain, url):
+    return domain + url
 
 
 def construct_json_for_page(all_posts, args):
@@ -180,8 +163,8 @@ def make_dir(directory):
 
 def main():
     args = load()
-    start_date = extract_date(config['facebook']['start_date'])
-    end_date = extract_date(config['facebook']['end_date'])
+    start_date = config['facebook']['start_date']
+    end_date = config['facebook']['end_date']
     all_posts = get_all_posts(args, start_date, end_date)
     construct_json_for_page(all_posts, args)
 
