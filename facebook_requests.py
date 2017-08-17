@@ -13,6 +13,14 @@ def load():
     global config
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument('--start_date',
+                        type=str,
+                        default=config['facebook']['start_date'],
+                        help='The start date from when the posts have to be extracted')
+    parser.add_argument('--end_date',
+                        type=str,
+                        default=config['facebook']['end_date'],
+                        help='The start date from when the posts have to be extracted')
     parser.add_argument('--url',
                         type=str,
                         default=config['facebook']['url'],
@@ -82,11 +90,11 @@ def reconnect(url):
     return response
 
 
-def get_all_posts(args, start_date, end_date):
+def get_all_posts(args):
     global config
     url = construct_url(domain=args.domain,
                         url=args.url)
-    date_range = '&since=%s&until=%s' % (start_date, end_date)
+    date_range = '&since=%s&until=%s' % (args.start_date, args.end_date)
     url += date_range
     response = get_response(url)
     start_pointer = json.loads(response.text)
@@ -152,7 +160,7 @@ def construct_json_for_page(all_posts, args):
     result = dict()
     result['id'] = page_id
     result['data'] = all_posts
-    with open(os.path.join(config['facebook']['report_directory'], config['facebook']['report_append_fvalue']) + page_id, 'w') as f:
+    with open(os.path.join(config['facebook']['data_directory'], config['facebook']['report_append_fvalue']) + page_id, 'w') as f:
         json.dump(result, f)
 
 
@@ -163,9 +171,7 @@ def make_dir(directory):
 
 def main():
     args = load()
-    start_date = config['facebook']['start_date']
-    end_date = config['facebook']['end_date']
-    all_posts = get_all_posts(args, start_date, end_date)
+    all_posts = get_all_posts(args)
     construct_json_for_page(all_posts, args)
 
 
