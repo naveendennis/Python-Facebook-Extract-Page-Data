@@ -12,10 +12,14 @@ The following command-line parameters are used :
 
 `--url` the partial url typed into the graph API explorer
 
+`--start_date` date from when the posts are to be extracted
+
+`--end_date`end date to which the posts are to be extracted
+
 The access token, url and other properties can be modified by editing the `config.ini` file directly. `(Recommended)`
 
 `start_date` and `end_date` fields in `config.ini` is used to determine the range of posts extracted by the program
 
 ## Usage
 
-    python3 facebook_requests.py
+    python3 facebook_requests.py --start_date 2016-05-22 --end_date 2017-01-01
