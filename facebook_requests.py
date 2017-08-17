@@ -21,6 +21,10 @@ def load():
                         type=str,
                         default=config['facebook']['end_date'],
                         help='The start date from when the posts have to be extracted')
+    parser.add_argument('--page_id',
+                        type=str,
+                        default=config['facebook']['page_id'],
+                        help='The start date from when the posts have to be extracted')
     parser.add_argument('--url',
                         type=str,
                         default=config['facebook']['url'],
@@ -93,7 +97,7 @@ def reconnect(url):
 def get_all_posts(args):
     global config
     url = construct_url(domain=args.domain,
-                        url=args.url)
+                        url=args.page_id+args.url)
     date_range = '&since=%s&until=%s' % (args.start_date, args.end_date)
     url += date_range
     response = get_response(url)
