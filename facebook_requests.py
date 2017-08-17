@@ -29,10 +29,6 @@ def load():
                         type=str,
                         default=config['facebook']['url'],
                         help='THe url that is present in the Facebook Graph API tool')
-    parser.add_argument('--access_token',
-                        type=str,
-                        default=config['facebook']['access_token'],
-                        help='The access token used by the application')
     parser.add_argument('--method',
                         type=str,
                         default=config['facebook']['method'],
@@ -102,7 +98,6 @@ def get_all_posts(args):
     url += date_range
     response = get_response(url)
     start_pointer = json.loads(response.text)
-    config['facebook']['access_token'] = args.access_token
     return get_them_all(args, start_pointer)
 
 
