@@ -61,7 +61,7 @@ def file_exists(path):
 def get_response(url):
     global config
     access_config = configparser.ConfigParser()
-    page_id = config['facebook']['url'].split('?')[0].split('/')[0]
+    page_id = config['facebook']['page_id']
     access_token_fn = 'properties/access_token'+page_id+'.ini'
 
     if file_exists(access_token_fn):
@@ -96,6 +96,7 @@ def get_all_posts(args):
                         url=args.page_id+args.url)
     date_range = '&since=%s&until=%s' % (args.start_date, args.end_date)
     url += date_range
+    config['facebook']['page_id'] = args.page_id
     response = get_response(url)
     start_pointer = json.loads(response.text)
     return get_them_all(args, start_pointer)
@@ -155,11 +156,10 @@ def construct_url(domain, url):
 
 def construct_json_for_page(all_posts, args):
     global config
-    page_id = args.url.split('?')[0].split('/')[0]
     result = dict()
-    result['id'] = page_id
+    result['id'] = args.page_id
     result['data'] = all_posts
-    with open(os.path.join(config['facebook']['data_directory'], config['facebook']['report_append_fvalue']) + page_id, 'w') as f:
+    with open(os.path.join(config['facebook']['data_directory'], config['facebook']['report_append_fvalue']) + args.page_id, 'w') as f:
         json.dump(result, f)
 
 
