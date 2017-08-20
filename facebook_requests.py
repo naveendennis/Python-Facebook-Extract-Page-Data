@@ -25,14 +25,14 @@ def load():
                         type=str,
                         default=config['facebook']['page_id'],
                         help='The start date from when the posts have to be extracted')
+    parser.add_argument('--ignore_search_tokens',
+                        type=str,
+                        default=config['facebook']['ignore_search_tokens'],
+                        help='Ignore search tokens')
     parser.add_argument('--url',
                         type=str,
                         default=config['facebook']['url'],
                         help='THe url that is present in the Facebook Graph API tool')
-    parser.add_argument('--method',
-                        type=str,
-                        default=config['facebook']['method'],
-                        help='Type of method used by request - get/post')
     parser.add_argument('--domain',
                         type=str,
                         default=config['facebook']['domain'],
@@ -97,6 +97,7 @@ def get_all_posts(args):
     date_range = '&since=%s&until=%s' % (args.start_date, args.end_date)
     url += date_range
     config['facebook']['page_id'] = args.page_id
+    config['facebook']['ignore_search_tokens'] = args.ignore_search_tokens
     response = get_response(url)
     start_pointer = json.loads(response.text)
     return get_them_all(args, start_pointer)
@@ -127,7 +128,8 @@ def get_them_all(args, start_pointer, has_comment=True):
         for each_status in result:
             if has_comment:
                 try:
-                    if not is_in_topic(each_status['message']):
+                    if not config['facebook']['ignore_search_tokens'] and \
+                            not is_in_topic(each_status['message']):
                         continue
                     else:
                         each_status['comments'] = get_them_all(args,
@@ -159,7 +161,7 @@ def construct_json_for_page(all_posts, args):
     result = dict()
     result['id'] = args.page_id
     result['data'] = all_posts
-    with open(os.path.join(config['facebook']['data_directory'], config['facebook']['report_append_fvalue']) + args.page_id, 'w') as f:
+    with open(os.path.join(config['facebook']['data_directory'], config['facebook']['data_append_fvalue']) + args.page_id, 'w') as f:
         json.dump(result, f)
 
 
