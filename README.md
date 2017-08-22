@@ -20,4 +20,10 @@ The access token, url and other properties can be modified by editing the `confi
 
 ## Usage
 
-    python3 facebook_requests.py --start_date 2016-05-22 --end_date 2017-01-01 --page_id rshouseofdesign
+    python3 facebook_requests.py --start_date 2016-05-22 --end_date 2017-01-01 --page_id SeventhAnomaly
+    
+    (Or)
+    
+    python3 facebook_request.py
+    
+Default property values are in `properties/config.ini`
