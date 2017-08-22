@@ -123,12 +123,12 @@ def get_them_all(args, start_pointer, has_comment=True):
     while True:
         try:
             result = start_pointer['data']
-        except KeyError:
-            break
+        except KeyError as e:
+            print('End of accessible data : + \n' + e)
         for each_status in result:
             if has_comment:
                 try:
-                    if not config['facebook']['ignore_search_tokens'] and \
+                    if not bool(config['facebook']['ignore_search_tokens']) and \
                             not is_in_topic(each_status['message']):
                         continue
                     else:
@@ -136,6 +136,8 @@ def get_them_all(args, start_pointer, has_comment=True):
                                                                each_status['comments'],
                                                                has_comment=False)
                 except KeyError:
+                    if bool(config['facebook']['ignore_search_tokens']):
+                        all_posts.append(each_status)
                     continue
 
             all_posts.append(each_status)
